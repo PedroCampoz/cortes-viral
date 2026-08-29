@@ -1,0 +1,76 @@
+# ==========================================================
+#  SEGREDOS — nunca versionar
+# ==========================================================
+# config.json guarda a chave de API salva pelo app
+config.json
+
+# credenciais OAuth do YouTube (client_secret.json e token.json)
+youtube/*
+!youtube/.gitkeep
+
+*.key
+*.pem
+.env
+.env.*
+
+# ==========================================================
+#  Conteúdo gerado — pesado e refazível
+# ==========================================================
+# cortes renderizados (mp4, srt, ass, png)
+clips/
+
+# vídeos baixados, transcrições e job.json
+workspace/
+
+# pasta de dados criada pelo executável no Windows
+CortesViral-dados/
+
+# trilhas enviadas pelo usuário
+music/
+
+# ffmpeg baixado automaticamente
+bin/
+
+# fontes: só as três Sora do projeto ficam no repositório
+fonts/*
+!fonts/Sora-Regular.ttf
+!fonts/Sora-Medium.ttf
+!fonts/Sora-Bold.ttf
+
+# mídia solta em qualquer pasta
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.m4v
+*.mp3
+*.m4a
+*.wav
+*.aac
+*.flac
+*.ogg
+*.srt
+*.ass
+
+# ==========================================================
+#  Build e ambiente
+# ==========================================================
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# ==========================================================
+#  Sistema operacional / editores
+# ==========================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,11 @@
+{
+  "_comentario": "Copie este arquivo para config.json e preencha. O config.json real fica fora do Git (veja .gitignore). Você também pode configurar tudo pela tela do programa, sem editar nada aqui.",
+
+  "api_key": "",
+  "engine_choice": "gemini",
+  "gemini_model": "gemini-2.5-flash",
+  "openai_model": "gpt-5.6-terra",
+  "ollama_model": "",
+  "template": "sora-clean",
+  "music_folder": ""
+}

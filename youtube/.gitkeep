@@ -1,0 +1,7 @@
+Esta pasta guarda as credenciais de publicação no YouTube:
+
+  client_secret.json  — baixado do Google Cloud Console
+  token.json          — gerado quando você autoriza pela primeira vez
+
+Os dois são SEGREDOS e ficam fora do Git (veja .gitignore).
+Para configurar, siga a seção "Publicar direto no YouTube" do README.md.

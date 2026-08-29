@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+yt-dlp
+faster-whisper
+anthropic
+Pillow
+requests
+python-multipart
+google-api-python-client
+google-auth-oauthlib

@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CortesViral — Editor de Cortes</title>
+<style>
+  :root{--bg:#0d0f14;--card:#161a23;--card2:#1d2230;--txt:#e8eaf0;--mut:#8b93a7;
+        --acc:#7c5cff;--acc2:#00e0a4;--warn:#ffb020;--err:#ff5470;--rad:14px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));
+        display:flex;align-items:center;justify-content:center;font-size:22px}
+  h1{font-size:22px}h1 span{color:var(--acc2)}
+  .sub{color:var(--mut);font-size:13px}
+  .card{background:var(--card);border:1px solid #232a3a;border-radius:var(--rad);padding:22px;margin-bottom:20px}
+  label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.5px}
+  input,select{width:100%;background:var(--card2);border:1px solid #2a3145;border-radius:9px;
+        color:var(--txt);padding:11px 13px;font-size:14px;outline:none}
+  input:focus{border-color:var(--acc)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+  button{background:linear-gradient(135deg,var(--acc),#5a3df0);color:#fff;border:none;border-radius:10px;
+        padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;margin-top:18px;width:100%}
+  button:disabled{opacity:.5;cursor:wait}
+  .bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:14px}
+  .fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0%;transition:width .6s}
+  .status{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:8px}
+  .clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+  .clip{background:var(--card);border:1px solid #232a3a;border-radius:var(--rad);overflow:hidden}
+  .clip video{width:100%;aspect-ratio:9/16;background:#000;max-height:420px}
+  .clip .body{padding:16px}
+  .clip h3{font-size:15px;margin-bottom:8px}
+  .score{float:right;background:rgba(0,224,164,.15);color:var(--acc2);font-size:12px;
+        padding:3px 9px;border-radius:99px;font-weight:700}
+  .pat{font-size:12.5px;color:var(--mut);margin:7px 0;line-height:1.45}
+  .pat b{color:var(--txt)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;margin-right:6px}
+  .t-hook{background:rgba(255,84,112,.18);color:var(--err)}
+  .t-dev{background:rgba(124,92,255,.18);color:#a794ff}
+  .t-cta{background:rgba(255,176,32,.18);color:var(--warn)}
+  .dl{display:flex;gap:10px;margin-top:12px}
+  .dl a{flex:1;text-align:center;font-size:13px;text-decoration:none;color:var(--txt);
+        background:var(--card2);border:1px solid #2a3145;padding:9px;border-radius:8px}
+  .dl a:hover{border-color:var(--acc)}
+  .subline{margin-top:6px;font-size:13px}
+  .editor{margin-top:12px;border-top:1px solid #232a3a;padding-top:10px}
+  /* timeline */
+  .tl{margin-top:8px;user-select:none}
+  .tlrow{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .tlname{width:74px;font-size:11px;color:var(--mut);text-transform:uppercase;flex:none}
+  .tltrack{position:relative;flex:1;height:34px;background:var(--card2);
+           border:1px solid #2a3145;border-radius:7px;overflow:hidden}
+  .tlruler{position:relative;height:16px;margin-left:82px;color:var(--mut);font-size:10px}
+  .tlruler span{position:absolute;transform:translateX(-50%)}
+  .blk{position:absolute;top:3px;height:28px;background:linear-gradient(135deg,var(--acc),#5a3df0);
+       border-radius:5px;cursor:grab;font-size:10px;color:#fff;overflow:hidden;
+       white-space:nowrap;padding:6px 7px;box-sizing:border-box;box-shadow:0 1px 4px #0006}
+  .blk.mus{background:linear-gradient(135deg,#0a8f6d,var(--acc2));color:#04231b;font-weight:700}
+  .blk.trim{background:linear-gradient(135deg,#8a6a00,var(--warn));color:#2a2000;font-weight:700}
+  .blk .h{position:absolute;top:0;width:9px;height:100%;cursor:ew-resize;background:#ffffff30}
+  .blk .h.l{left:0;border-radius:5px 0 0 5px}
+  .blk .h.r{right:0;border-radius:0 5px 5px 0}
+  .tlhint{font-size:11px;color:var(--mut);margin:6px 0}
+  .hidden{display:none}
+  .tabs{display:flex;gap:8px;margin-bottom:18px}
+  .tab{flex:1;text-align:center;padding:12px;border-radius:10px;cursor:pointer;
+       background:var(--card2);border:1px solid #2a3145;font-size:14px;font-weight:600;color:var(--mut)}
+  .tab.active{background:linear-gradient(135deg,var(--acc),#5a3df0);color:#fff;border-color:transparent}
+  .drop{border:2px dashed #2a3145;border-radius:12px;padding:34px 18px;text-align:center;
+        cursor:pointer;background:var(--card2);transition:border-color .2s}
+  .drop:hover,.drop.over{border-color:var(--acc)}
+  .drop .big{font-size:34px;margin-bottom:8px}
+  .drop .fn{color:var(--acc2);font-weight:600;margin-top:8px}
+  .warn{color:var(--warn);font-size:13px;margin-top:10px}
+  .err{color:var(--err);font-size:13px;margin-top:10px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">✂️</div>
+    <div>
+      <h1>Cortes<span>Viral</span></h1>
+      <div class="sub">Vídeo longo → cortes virais 9:16 HD com legenda automática
+        <span id="verApp" style="opacity:.5"></span></div>
+    </div>
+  </header>
+
+  <div class="card" style="padding:16px 22px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <b style="font-size:13px">🔑 Chave de API padrão</b>
+      <span class="sub" id="cfgStatus">—</span>
+      <div style="flex:1"></div>
+      <a href="#" class="sub" onclick="cfgToggle();return false"
+         style="color:var(--acc2);text-decoration:none">alterar</a>
+    </div>
+    <div id="cfgBox" class="hidden" style="margin-top:10px">
+      <div class="row">
+        <div style="grid-column:span 2">
+          <label>Chave (Gemini AQ.… ou AIza… · Claude sk-ant… · OpenAI sk-…)</label>
+          <input id="cfgKey" type="password" placeholder="AQ.… (formato novo do Google) — fica salva no app">
+        </div>
+        <div>
+          <label>Modelo Gemini padrão</label>
+          <select id="cfgModel">
+            <option value="gemini-2.5-flash">2.5 Flash</option>
+            <option value="gemini-2.5-flash-lite">2.5 Flash-Lite (mais cota)</option>
+            <option value="gemini-2.5-pro">2.5 Pro</option>
+          </select>
+        </div>
+        <div>
+          <label>Modelo ChatGPT padrão</label>
+          <select id="cfgModelGpt">
+            <option value="gpt-5.6-terra">GPT-5.6 Terra (equilibrado)</option>
+            <option value="gpt-5.6-luna">GPT-5.6 Luna (mais barato)</option>
+            <option value="gpt-5.6-sol">GPT-5.6 Sol (melhor)</option>
+            <option value="gpt-4o-mini">GPT-4o mini (antigo)</option>
+          </select>
+        </div>
+      </div>
+      <div class="dl">
+        <a href="#" onclick="cfgSave();return false">💾 Salvar chave</a>
+        <a href="#" onclick="cfgTest();return false">🧪 Testar chave</a>
+        <a href="#" onclick="cfgDiag();return false">🩺 Diagnóstico da IA</a>
+        <a href="#" onclick="cfgModelos();return false">🔄 Carregar modelos da minha chave</a>
+      </div>
+      <div id="cfgMsg" class="sub" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:16px 22px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <b style="font-size:13px">📤 Publicar no YouTube</b>
+      <span class="sub" id="ytStatus">—</span>
+      <div style="flex:1"></div>
+      <a href="#" class="sub" onclick="ytToggle();return false"
+         style="color:var(--acc2);text-decoration:none">configurar</a>
+    </div>
+    <div id="ytBox" class="hidden" style="margin-top:10px">
+      <div class="sub" style="margin-bottom:8px">
+        1. No <a href="https://console.cloud.google.com/apis/credentials" target="_blank"
+           style="color:var(--acc2)">Google Cloud Console</a>, habilite a "YouTube Data API v3"
+        e crie uma credencial OAuth do tipo "Aplicativo para computador".
+        2. Baixe o client_secret.json e envie abaixo. 3. Clique em Autorizar
+        (abre uma aba do navegador só na primeira vez).
+      </div>
+      <div class="dl">
+        <input id="ytSecretInput" type="file" accept=".json" class="hidden">
+        <a href="#" onclick="$('ytSecretInput').click();return false">📄 <span id="ytSecretName">Enviar client_secret.json</span></a>
+        <a href="#" onclick="ytAuth();return false">🔓 Autorizar no YouTube</a>
+        <a href="#" onclick="ytLogout();return false">🚪 Desconectar</a>
+      </div>
+      <div id="ytMsg" class="sub" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" id="tab-yt" onclick="setTab('yt')">▶️ Link do YouTube</div>
+      <div class="tab" id="tab-up" onclick="setTab('up')">📁 Enviar arquivo</div>
+      <div class="tab" id="tab-lote" onclick="setTab('lote')">🗂️ Lote (pasta/Drive)</div>
+    </div>
+
+    <div id="pane-yt">
+      <label>Link do YouTube</label>
+      <input id="url" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+
+    <div id="pane-up" class="hidden">
+      <label>Arquivo de vídeo (mp4, mov, m4v, webm, mkv, avi)</label>
+      <div class="drop" id="drop" onclick="$('fileInput').click()">
+        <div class="big">📤</div>
+        <div>Clique aqui ou arraste seu vídeo</div>
+        <div class="fn" id="fileName"></div>
+      </div>
+      <input id="fileInput" type="file" accept="video/*,.mov,.mkv" class="hidden">
+    </div>
+
+    <div id="pane-lote" class="hidden">
+      <label>Pasta dos vídeos (Google Drive para Desktop, Dropbox ou local)</label>
+      <input id="lotePasta" placeholder="/Users/voce/Google Drive/Meu Drive/videos">
+      <label>Pasta das músicas (opcional — usadas em rodízio)</label>
+      <input id="loteMus" placeholder="/Users/voce/Google Drive/Meu Drive/trilhas">
+      <div class="row" style="margin-top:12px">
+        <div>
+          <label>Cortes por vídeo</label>
+          <select id="loteN"><option>1</option><option>2</option><option>3</option>
+            <option>5</option></select>
+        </div>
+        <div>
+          <label>Correção de cor</label>
+          <select id="loteHdr">
+            <option value="1" selected>Auto HDR (iPhone) ligado</option>
+            <option value="0">Desligado</option>
+          </select>
+        </div>
+        <div>
+          <label>Brilho: <span id="vBri">0</span></label>
+          <input type="range" id="loteBri" min="-30" max="30" value="0" style="padding:0">
+        </div>
+        <div>
+          <label>Contraste: <span id="vCon">1.00</span></label>
+          <input type="range" id="loteCon" min="50" max="200" value="100" style="padding:0">
+        </div>
+        <div>
+          <label>Saturação: <span id="vSat">1.00</span></label>
+          <input type="range" id="loteSat" min="0" max="250" value="100" style="padding:0">
+        </div>
+        <div>
+          <label>Temperatura: <span id="vTmp">off</span></label>
+          <input type="range" id="loteTmp" min="0" max="10000" step="250" value="0" style="padding:0">
+        </div>
+      </div>
+      <div class="dl" style="margin-top:12px">
+        <a href="#" onclick="loteScan();return false">🔍 Verificar pastas</a>
+        <a href="#" onclick="loteCancel();return false">✋ Cancelar lote</a>
+        <a href="#" onclick="diag();return false">🩺 Diagnóstico</a>
+      </div>
+      <div id="loteInfo" class="sub" style="margin-top:10px"></div>
+      <div id="loteProg" class="sub" style="margin-top:10px"></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Motor de IA</label>
+        <select id="engine" onchange="toggleEngine()">
+          <option value="gemini" selected>Gemini (chave Google)</option>
+          <option value="openai">ChatGPT (chave OpenAI)</option>
+          <option value="ollama">Ollama (local, grátis)</option>
+          <option value="heuristica">Heurística (grátis, básico)</option>
+          <option value="auto">Automático (detecta pela chave)</option>
+        </select>
+      </div>
+      <div id="ollamaBox" class="hidden">
+        <label>Modelo Ollama</label>
+        <input id="ollamaModel" list="ollamaModels" placeholder="llama3.1 (padrão)">
+        <datalist id="ollamaModels">
+          <option value="llama3.2">llama3.2 — leve, 3B (~2 GB RAM)</option>
+          <option value="llama3.1">llama3.1 — equilibrado, 8B (~5 GB RAM)</option>
+          <option value="qwen2.5:14b">qwen2.5:14b — bom custo/benefício (~9 GB RAM)</option>
+          <option value="gemma3:27b">gemma3:27b — forte, multilíngue (~17 GB RAM)</option>
+          <option value="qwen2.5:32b">qwen2.5:32b — potente (~20 GB RAM)</option>
+          <option value="deepseek-r1:32b">deepseek-r1:32b — raciocínio (~20 GB RAM)</option>
+          <option value="llama3.3:70b">llama3.3:70b — o mais potente (~43 GB RAM)</option>
+        </datalist>
+        <span class="sub" style="font-size:11px">Escolha na lista ou digite o nome de outro modelo já baixado no Ollama.
+          Modelos maiores exigem mais RAM/VRAM e demoram mais.</span>
+      </div>
+      <div id="geminiBox">
+        <label>Modelo Gemini</label>
+        <select id="geminiModel">
+          <option value="gemini-2.5-flash" selected>2.5 Flash (equilibrado)</option>
+          <option value="gemini-2.5-flash-lite">2.5 Flash-Lite (mais cota grátis)</option>
+          <option value="gemini-2.5-pro">2.5 Pro (melhor, cota menor)</option>
+        </select>
+      </div>
+      <div id="openaiBox" class="hidden">
+        <label>Modelo ChatGPT</label>
+        <select id="openaiModel">
+          <option value="gpt-5.6-terra" selected>GPT-5.6 Terra (equilibrado)</option>
+          <option value="gpt-5.6-luna">GPT-5.6 Luna (mais barato)</option>
+          <option value="gpt-5.6-sol">GPT-5.6 Sol (melhor, mais caro)</option>
+          <option value="gpt-4o-mini">GPT-4o mini (antigo, econômico)</option>
+        </select>
+      </div>
+      <div id="keyBox">
+        <label id="keyLabel">Chave API Gemini</label>
+        <input id="key" type="password" placeholder="AQ.… ou AIza…">
+      </div>
+      <div>
+        <label>Nº de cortes</label>
+        <select id="n"><option>3</option><option>5</option><option>8</option><option>10</option></select>
+      </div>
+      <div>
+        <label>Duração (s)</label>
+        <select id="dur">
+          <option value="25,45">25–45</option>
+          <option value="25,75" selected>25–75</option>
+          <option value="45,90">45–90</option>
+        </select>
+      </div>
+      <div>
+        <label>Modelo Whisper</label>
+        <select id="wm">
+          <option value="tiny">tiny (rápido)</option>
+          <option value="small" selected>small (equilibrado)</option>
+          <option value="medium">medium (preciso)</option>
+          <option value="large-v3">large-v3 (máximo)</option>
+        </select>
+      </div>
+      <div>
+        <label>Modelo de legenda</label>
+        <select id="tplSel">
+          <option value="sora-clean" selected>Sora Clean (branco, limpo)</option>
+          <option value="sora-destaque">Sora Destaque (palavra em amarelo)</option>
+          <option value="viral-bold">Viral Bold (contorno grosso)</option>
+        </select>
+      </div>
+      <div>
+        <label>Layout</label>
+        <select id="layout">
+          <option value="split" selected>Viral (frame + tarja)</option>
+          <option value="full">Tela cheia</option>
+        </select>
+      </div>
+      <div>
+        <label>Fonte da legenda</label>
+        <input id="fontInput" type="file" accept=".ttf,.otf,.ttc" class="hidden">
+        <button type="button" class="tab" style="width:100%;font-weight:500"
+                onclick="$('fontInput').click()">🔤 <span id="fontName">Padrão (Arial Black)</span></button>
+      </div>
+      <div>
+        <label>Música de fundo</label>
+        <input id="musicInput" type="file" accept="audio/*,.mp3,.m4a,.wav" class="hidden">
+        <button type="button" class="tab" style="width:100%;font-weight:500"
+                onclick="$('musicInput').click()">🎵 <span id="musicName">Nenhuma</span></button>
+      </div>
+      <div>
+        <label>Volume da música: <span id="volVal">12%</span></label>
+        <input id="musicVol" type="range" min="0" max="60" value="12"
+               style="width:100%;padding:0"
+               oninput="$('volVal').textContent=this.value+'%'">
+        <a href="#" class="sub" style="font-size:11px"
+           onclick="clearMusic();return false">remover música</a>
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Pasta de músicas (rodízio automático — 1 trilha diferente por corte)</label>
+        <input id="musicFolder" placeholder="/Users/voce/Google Drive/Meu Drive/trilhas (deixe vazio p/ usar a música única acima)">
+      </div>
+    </div>
+    <button id="go">🚀 Gerar cortes virais</button>
+    <div id="prog" class="hidden">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="status"><span id="step"></span><span id="pct"></span></div>
+      <div id="detail" class="sub"></div>
+    </div>
+    <div id="warn" class="warn hidden"></div>
+    <div id="err" class="err hidden"></div>
+  </div>
+
+  <div class="card" id="projCard" style="padding:16px 22px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <b style="font-size:13px">🗂️ Projetos recentes</b>
+      <span class="sub" id="projStatus">—</span>
+      <div style="flex:1"></div>
+      <a href="#" class="sub" onclick="projLoad();return false"
+         style="color:var(--acc2);text-decoration:none">atualizar</a>
+    </div>
+    <div id="projList" style="margin-top:10px"></div>
+  </div>
+
+  <div id="clips" class="clips"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let timer=null, mode='yt', pickedFile=null;
+
+function setTab(m){
+  mode=m;
+  ['yt','up','lote'].forEach(k=>{
+    $('tab-'+k).classList.toggle('active',m===k);
+    $('pane-'+k).classList.toggle('hidden',m!==k);
+  });
+  $('go').textContent = m==='up' ? '🚀 Gerar cortes do arquivo'
+    : (m==='lote' ? '🚀 Processar pasta inteira' : '🚀 Gerar cortes virais');
+}
+
+/* ---------------- Chave de API padrão ---------------- */
+function cfgToggle(){$('cfgBox').classList.toggle('hidden')}
+async function cfgLoad(){
+  const d=await(await fetch('/api/config')).json();
+  const prov = d.provedor||'';
+  $('cfgStatus').innerHTML = d.tem_chave
+    ? `<span style="color:var(--acc2)">✅ salva (${d.chave_mascarada})</span>`
+      +(prov?` · <b>${prov}</b>`:'')
+      +` · modelo ${prov.indexOf('ChatGPT')>=0?d.openai_model:d.gemini_model}`
+    : '<span style="color:var(--warn)">⚠️ nenhuma chave salva — usando heurística</span>';
+  if(d.gemini_model)$('cfgModel').value=d.gemini_model;
+  if(d.openai_model&&$('cfgModelGpt'))$('cfgModelGpt').value=d.openai_model;
+  if(d.versao&&$('verApp'))$('verApp').textContent=' · v'+d.versao;
+}
+async function cfgSave(){
+  $('cfgMsg').textContent='salvando…';
+  const r=await fetch('/api/config',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({api_key:$('cfgKey').value.trim(),
+      gemini_model:$('cfgModel').value,
+      openai_model:$('cfgModelGpt')?$('cfgModelGpt').value:undefined})});
+  if(r.ok){$('cfgMsg').innerHTML='<span style="color:var(--acc2)">✅ salva</span>';
+    $('cfgKey').value='';cfgLoad()}
+  else $('cfgMsg').innerHTML='<span style="color:var(--err)">erro ao salvar</span>';
+}
+async function cfgTest(){
+  $('cfgMsg').textContent='testando com uma chamada real…';
+  const d=await(await fetch('/api/config/test',{method:'POST'})).json();
+  $('cfgMsg').innerHTML = d.ok
+    ? `<span style="color:var(--acc2)">✅ ${d.msg}</span>`
+    : `<span style="color:var(--err)">❌ ${d.msg}</span>`;
+}
+/* Troca para um motor que funciona sem chave nem saldo. */
+function usarGratis(){
+  $('engine').value='heuristica';
+  toggleEngine();
+  $('cfgMsg').innerHTML='<span style="color:var(--acc2)">✅ Motor trocado para '
+    +'<b>Heurística</b> (grátis, sem chave). Pode gerar os cortes agora. '
+    +'Para qualidade melhor sem pagar, instale o Ollama e escolha o motor Ollama.</span>';
+  window.scrollTo({top:$('engine').getBoundingClientRect().top+window.scrollY-100,
+                   behavior:'smooth'});
+}
+
+/* Preenche os seletores com os modelos que a chave realmente tem.
+   Evita escolher um modelo inexistente e achar que o app está quebrado. */
+async function cfgModelos(){
+  $('cfgMsg').textContent='consultando os modelos da sua chave…';
+  const d=await(await fetch('/api/models')).json();
+  if(!d.ok){
+    $('cfgMsg').innerHTML=`<span style="color:var(--err)">❌ ${d.erro||'não consegui listar'}</span>`;
+    return;
+  }
+  const alvos = d.provedor==='openai'
+    ? [$('cfgModelGpt'), $('openaiModel')]
+    : [$('cfgModel'), $('geminiModel')];
+  alvos.forEach(sel=>{
+    if(!sel)return;
+    const antigo=sel.value;
+    sel.innerHTML=d.modelos.map(m=>`<option value="${m}">${m}</option>`).join('');
+    sel.value = d.modelos.includes(antigo) ? antigo
+              : (d.modelos.includes(d.atual) ? d.atual : d.modelos[0]||'');
+  });
+  $('cfgMsg').innerHTML=`<span style="color:var(--acc2)">✅ ${d.modelos.length} modelo(s) `
+    +`carregado(s) da sua chave (${d.provedor==='openai'?'OpenAI':'Google'}). `
+    +`Escolha um e clique em Salvar.</span>`;
+}
+
+async function cfgDiag(){
+  $('cfgMsg').textContent='verificando passo a passo…';
+  const d=await(await fetch('/api/ia/diag')).json();
+  let h=`<b>Diagnóstico — ${d.provedor||'IA'}</b><br>`;
+  (d.etapas||[]).forEach(e=>{
+    h+=`${e.ok?'✅':'❌'} ${e.nome}`
+      +(e.detalhe?` <span style="opacity:.7">— ${e.detalhe}</span>`:'')+'<br>';
+  });
+  const borda = d.sem_saldo ? '1px solid var(--warn)' : '1px solid transparent';
+  h+=`<div style="margin-top:8px;padding:10px;border-radius:6px;border:${borda};`
+    +`background:rgba(255,255,255,.05);line-height:1.5;`
+    +`color:${d.ok?'var(--acc2)':'var(--warn)'}">${d.conclusao||''}</div>`;
+  if(d.sem_saldo){
+    h+=`<div class="dl" style="margin-top:8px">`
+      +`<a href="#" onclick="usarGratis();return false">⚡ Usar motor grátis agora</a></div>`;
+  }
+  if(d.modelos_disponiveis&&d.modelos_disponiveis.length){
+    h+=`<div style="margin-top:6px;font-size:11px;opacity:.65">Modelos liberados para sua chave: `
+      +d.modelos_disponiveis.join(', ')+'</div>';
+  }
+  $('cfgMsg').innerHTML=h;
+}
+cfgLoad();
+
+/* ---------------- Publicar no YouTube ---------------- */
+function ytToggle(){$('ytBox').classList.toggle('hidden')}
+async function ytLoadStatus(){
+  const d=await(await fetch('/api/youtube/status')).json();
+  if(!d.libs_ok){
+    $('ytStatus').innerHTML='<span style="color:var(--err)">⚠️ dependências não instaladas '
+      +'(pip install -r requirements.txt)</span>';
+    return d;
+  }
+  if(d.autorizando){
+    $('ytStatus').innerHTML='<span style="color:var(--warn)">⏳ aguardando autorização no navegador…</span>';
+  }else if(d.autorizado){
+    $('ytStatus').innerHTML='<span style="color:var(--acc2)">✅ autorizado — pronto para publicar</span>';
+  }else if(d.tem_client_secret){
+    $('ytStatus').innerHTML='<span style="color:var(--warn)">⚠️ falta autorizar</span>';
+  }else{
+    $('ytStatus').innerHTML='<span class="sub">não configurado</span>';
+  }
+  if(d.erro)$('ytMsg').innerHTML='<span style="color:var(--err)">'+d.erro+'</span>';
+  return d;
+}
+$('ytSecretInput').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  $('ytSecretName').textContent='enviando…';
+  const fd=new FormData(); fd.append('file',f);
+  const r=await fetch('/api/youtube/client_secret',{method:'POST',body:fd});
+  const d=await r.json();
+  if(r.ok){$('ytSecretName').textContent='✅ '+f.name;ytLoadStatus()}
+  else{$('ytSecretName').textContent='Enviar client_secret.json';
+    $('ytMsg').innerHTML='<span style="color:var(--err)">'+(d.detail||'erro')+'</span>'}
+};
+async function ytAuth(){
+  $('ytMsg').textContent='abrindo o navegador para autorizar…';
+  const r=await fetch('/api/youtube/auth',{method:'POST'});
+  const d=await r.json();
+  if(!r.ok){$('ytMsg').innerHTML='<span style="color:var(--err)">'+(d.detail||'erro')+'</span>';return}
+  const poll=setInterval(async()=>{
+    const st=await ytLoadStatus();
+    if(!st.autorizando){clearInterval(poll);
+      $('ytMsg').textContent=st.autorizado?'Autorizado com sucesso!':'';}
+  },1500);
+}
+async function ytLogout(){
+  await fetch('/api/youtube/logout',{method:'POST'});
+  ytLoadStatus();
+}
+ytLoadStatus();
+
+/* ---------------- Lote (pasta / Google Drive) ---------------- */
+/* (projLoad/restaurarDaURL são chamados no fim do script) */
+['loteBri','loteCon','loteSat','loteTmp'].forEach(id=>{
+  const el=$(id); if(!el)return;
+  el.oninput=()=>{
+    $('vBri').textContent=(+$('loteBri').value/100).toFixed(2);
+    $('vCon').textContent=(+$('loteCon').value/100).toFixed(2);
+    $('vSat').textContent=(+$('loteSat').value/100).toFixed(2);
+    $('vTmp').textContent=+$('loteTmp').value?(+$('loteTmp').value+'K'):'off';
+  };
+});
+async function loteScan(){
+  const p=$('lotePasta').value.trim(), m=$('loteMus').value.trim();
+  if(!p){$('lotePasta').focus();return}
+  $('loteInfo').textContent='verificando…';
+  const r=await fetch('/api/batch/scan?pasta='+encodeURIComponent(p)
+    +'&pasta_musicas='+encodeURIComponent(m));
+  const d=await r.json();
+  if(!d.pasta_ok){$('loteInfo').innerHTML='<span style="color:var(--err)">Pasta não encontrada. '
+    +'Cole o caminho completo — no Finder, clique com botão direito na pasta e segure ⌥ para "Copiar como nome do caminho".</span>';return}
+  const novos=d.videos.filter(v=>!v.feito).length;
+  $('loteInfo').innerHTML=`📹 <b>${d.videos.length}</b> vídeo(s) na pasta — `
+    +`<b>${novos}</b> ainda não processado(s)`
+    +(m?(d.musicas_ok?` &nbsp;•&nbsp; 🎵 <b>${d.musicas.length}</b> música(s)`
+        :' &nbsp;•&nbsp; <span style="color:var(--warn)">pasta de músicas não encontrada</span>'):'')
+    +`<br><span style="opacity:.7">${d.videos.slice(0,8).map(v=>(v.feito?'✅ ':'⬜️ ')+v.nome).join(' · ')}${d.videos.length>8?' …':''}</span>`;
+}
+async function diag(){
+  $('loteInfo').textContent='verificando o sistema…';
+  const p=encodeURIComponent($('lotePasta').value.trim());
+  const m=encodeURIComponent($('loteMus').value.trim());
+  const d=await(await fetch(`/api/diag?pasta=${p}&pasta_musicas=${m}`)).json();
+  const ic=b=>b?'✅':'❌';
+  let h='<b>Diagnóstico do sistema</b><br>';
+  h+=`${ic(d.ffmpeg.ok)} ffmpeg — ${d.ffmpeg.versao||d.ffmpeg.erro||''}<br>`;
+  h+=`&nbsp;&nbsp;${ic(d.ffmpeg.legenda_ass)} legendas embutidas &nbsp; `
+    +`${ic(d.ffmpeg.tonemap_hdr)} correção HDR<br>`;
+  h+=`${ic(d.ffprobe.ok)} ffprobe<br>`;
+  h+=`${ic(d.whisper.ok)} transcrição (faster-whisper) ${d.whisper.erro||''}<br>`;
+  h+=`${ic(d.ollama.ok)} Ollama — ${d.ollama.ok?('modelos: '+(d.ollama.modelos.join(', ')||'NENHUM BAIXADO')):d.ollama.erro}<br>`;
+  h+=`${ic(d.disco.ok)} disco — ${d.disco.livre_gb} GB livres de ${d.disco.total_gb} GB<br>`;
+  if(d.pasta){
+    h+=`${ic(d.pasta.existe)} pasta — ${d.pasta.caminho}<br>`;
+    if(d.pasta.existe){
+      h+=`&nbsp;&nbsp;${d.pasta.videos} vídeo(s)`;
+      if(d.pasta.primeiro){
+        h+=` · 1º: ${d.pasta.primeiro} (${d.pasta.mb} MB, ${d.pasta.duracao_s}s)`
+          +` ${ic(d.pasta.leitura)} leitura`
+          +` ${d.pasta.tem_audio?'🔊 com áudio':'🔇 SEM ÁUDIO'}`
+          +`${d.pasta.hdr?' · HDR':''}`;
+        if(d.pasta.erro_leitura)h+=`<br><span style="color:var(--err)">${d.pasta.erro_leitura}</span>`;
+      }
+      h+='<br>';
+    }
+  }
+  if(d.musicas)h+=`${ic(d.musicas.existe)} músicas — ${d.musicas.qtd} arquivo(s)<br>`;
+  if(d.lote.erros&&d.lote.erros.length)
+    h+=`<span style="color:var(--err)">Erros do último lote:<br>${d.lote.erros.join('<br>')}</span>`;
+  $('loteInfo').innerHTML=h;
+}
+async function loteCancel(){await fetch('/api/batch/cancel',{method:'POST'});
+  $('loteProg').textContent='cancelando após o vídeo atual…'}
+async function loteStart(){
+  const p=$('lotePasta').value.trim();
+  if(!p){$('lotePasta').focus();return}
+  const body={pasta:p,pasta_musicas:$('loteMus').value.trim(),
+    cortes_por_video:+$('loteN').value,
+    min_len:+$('dur').value.split(',')[0],max_len:+$('dur').value.split(',')[1],
+    whisper_model:$('wm').value,layout:$('layout').value,
+    engine_choice:$('engine').value,api_key:($('key')?$('key').value.trim():'')||null,
+    gemini_model:$('geminiModel')?$('geminiModel').value:'',
+    ollama_model:$('ollamaModel')?$('ollamaModel').value.trim():'',
+    music_volume:$('musicVol')?+$('musicVol').value:12,
+    template:$('tplSel')?$('tplSel').value:'sora-clean',
+    auto_hdr:$('loteHdr').value==='1',
+    brilho:+$('loteBri').value/100,contraste:+$('loteCon').value/100,
+    saturacao:+$('loteSat').value/100,temperatura:+$('loteTmp').value};
+  const r=await fetch('/api/batch',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.json().catch(()=>({detail:'erro'}));
+    $('loteProg').innerHTML='<span style="color:var(--err)">'+e.detail+'</span>';return}
+  $('go').disabled=true;
+  timer=setInterval(lotePoll,2500); lotePoll();
+}
+async function lotePoll(){
+  const st=await(await fetch('/api/batch/status')).json();
+  let h='';
+  if(st.atual){
+    const nomes={copiando:'📥 copiando do Drive',preparando:'📁 preparando',
+      baixando:'⬇️ baixando',transcrevendo:'🎙️ transcrevendo',
+      analisando:'🧠 analisando',renderizando:'🎬 renderizando',
+      concluido:'✅ concluído',erro:'❌ erro',iniciando:'⏳ iniciando'};
+    h+=`<b>${st.atual.nome}</b> — ${nomes[st.atual.step]||st.atual.step} `
+      +`<b>${st.atual.progress}%</b>`
+      +(st.atual.detail?` <span style="opacity:.7">${st.atual.detail}</span>`:'')+'<br>';
+  }
+  if(st.fila.length) h+=`<span style="opacity:.7">na fila: ${st.fila.join(' · ')}</span><br>`;
+  if(st.feitos.length) h+=st.feitos.map(f=>`✅ ${f.nome} — ${f.cortes} corte(s)`
+    +(f.musica?` 🎵 ${f.musica}`:'')+` &nbsp;<a href="/editor?job=${f.job}&clip=1"
+    style="color:var(--acc2)">abrir no editor</a>`).join('<br>');
+  if(st.erros.length) h+=`<br><span style="color:var(--err)">${st.erros.join('<br>')}</span>`;
+  $('loteProg').innerHTML=h||'aguardando…';
+  if(!st.ativo&&!st.atual){clearInterval(timer);$('go').disabled=false;
+    if(st.feitos.length)h+='<br><b>Lote concluído.</b>';$('loteProg').innerHTML=h}
+}
+
+function toggleEngine(){
+  const e=$('engine').value;
+  $('ollamaBox').classList.toggle('hidden',e!=='ollama');
+  $('geminiBox').classList.toggle('hidden',e!=='gemini');
+  $('openaiBox').classList.toggle('hidden',e!=='openai');
+  $('keyBox').classList.toggle('hidden',e==='ollama'||e==='heuristica');
+  if(e==='gemini'){
+    $('keyLabel').textContent='Chave API Gemini';
+    $('key').placeholder='AQ.… ou AIza… (deixe vazio p/ usar a chave salva)';
+  }else if(e==='openai'){
+    $('keyLabel').textContent='Chave API OpenAI (ChatGPT)';
+    $('key').placeholder='sk-… ou sk-proj-… (deixe vazio p/ usar a chave salva)';
+  }else{
+    $('keyLabel').textContent='Chave API';
+    $('key').placeholder='AQ.… (Gemini) · sk-… (OpenAI) · sk-ant-… (Claude)';
+  }
+}
+toggleEngine();
+
+// upload de fonte
+$('fontInput').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  $('fontName').textContent='enviando...';
+  const fd=new FormData(); fd.append('file',f);
+  const r=await fetch('/api/font',{method:'POST',body:fd});
+  const d=await r.json().catch(()=>({}));
+  $('fontName').textContent=r.ok?(d.family||f.name):'erro na fonte';
+};
+
+// upload de música de fundo
+$('musicInput').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  $('musicName').textContent='enviando...';
+  const fd=new FormData(); fd.append('file',f);
+  const r=await fetch('/api/music',{method:'POST',body:fd});
+  const d=await r.json().catch(()=>({}));
+  $('musicName').textContent=r.ok?(d.name||f.name):'erro no áudio';
+};
+async function clearMusic(){
+  await fetch('/api/music',{method:'DELETE'});
+  $('musicName').textContent='Nenhuma'; $('musicInput').value='';
+}
+
+// seleção / drag-and-drop de arquivo
+$('fileInput').onchange=e=>{ pickedFile=e.target.files[0]||null;
+  $('fileName').textContent=pickedFile?pickedFile.name:''; };
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>{ pickedFile=e.dataTransfer.files[0]||null;
+  $('fileName').textContent=pickedFile?pickedFile.name:''; });
+
+$('go').onclick=async()=>{
+  if(mode==='lote'){ loteStart(); return }
+  const [min_len,max_len]=$('dur').value.split(',').map(Number);
+  let r;
+  const engine=$('engine').value;
+  const apiKey=$('key')?$('key').value.trim():'';
+  const ollamaModel=$('ollamaModel')?$('ollamaModel').value.trim():'';
+  const geminiModel=$('geminiModel')?$('geminiModel').value:'';
+  const openaiModel=$('openaiModel')?$('openaiModel').value:'';
+  const musicVol=$('musicVol')?+$('musicVol').value:12;
+  const musicFolder=$('musicFolder')?$('musicFolder').value.trim():'';
+  const template=$('tplSel')?$('tplSel').value:'sora-clean';
+  if(mode==='up'){
+    if(!pickedFile){$('drop').classList.add('over');return}
+    const fd=new FormData();
+    fd.append('file',pickedFile);
+    fd.append('api_key',apiKey);
+    fd.append('num_clips',$('n').value);
+    fd.append('min_len',min_len); fd.append('max_len',max_len);
+    fd.append('whisper_model',$('wm').value); fd.append('layout',$('layout').value);
+    fd.append('engine_choice',engine); fd.append('ollama_model',ollamaModel);
+    fd.append('gemini_model',geminiModel); fd.append('music_volume',musicVol);
+    fd.append('openai_model',openaiModel);
+    fd.append('music_folder',musicFolder); fd.append('template',template);
+    startUI();
+    r=await fetch('/api/jobs/upload',{method:'POST',body:fd});
+  }else{
+    const url=$('url').value.trim();
+    if(!url){$('url').focus();return}
+    startUI();
+    r=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url,api_key:apiKey||null,
+        num_clips:+$('n').value,min_len,max_len,whisper_model:$('wm').value,
+        layout:$('layout').value,engine_choice:engine,ollama_model:ollamaModel,
+        gemini_model:geminiModel,openai_model:openaiModel,
+        music_volume:musicVol,music_folder:musicFolder,
+        template:template})});
+  }
+  if(!r.ok){const e=await r.json().catch(()=>({detail:'erro'}));
+    $('go').disabled=false;$('err').textContent=e.detail;$('err').classList.remove('hidden');return}
+  const {id}=await r.json();
+  timer=setInterval(()=>poll(id),2500);
+};
+
+function startUI(){
+  $('go').disabled=true;$('prog').classList.remove('hidden');
+  $('err').classList.add('hidden');$('warn').classList.add('hidden');
+  $('clips').innerHTML='';
+}
+
+async function poll(id){
+  const j=await(await fetch('/api/jobs/'+id)).json();
+  $('fill').style.width=j.progress+'%';
+  $('pct').textContent=j.progress+'%';
+  $('step').textContent={baixando:'⬇️ Baixando vídeo HD',preparando:'📁 Preparando arquivo',transcrevendo:'🎙️ Transcrevendo',
+    analisando:'🧠 Identificando padrões virais',renderizando:'🎬 Renderizando cortes',
+    concluido:'✅ Concluído',erro:'❌ Erro',iniciando:'⏳ Iniciando'}[j.step]||j.step;
+  $('detail').textContent=j.detail||'';
+  if(j.warning){$('warn').textContent=j.warning;$('warn').classList.remove('hidden')}
+  if(j.step==='erro'){clearInterval(timer);$('go').disabled=false;
+    $('err').textContent=j.detail;$('err').classList.remove('hidden');return}
+  if(j.step==='concluido'){clearInterval(timer);$('go').disabled=false;render(j)}
+}
+
+/* ---------------- Projetos salvos ---------------- */
+function quandoTxt(ts){
+  if(!ts)return '';
+  const d=new Date(ts*1000), ag=new Date();
+  const dia=(x)=>x.toISOString().slice(0,10);
+  const hora=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(dia(d)===dia(ag))return 'hoje '+hora;
+  const onte=new Date(ag.getTime()-86400000);
+  if(dia(d)===dia(onte))return 'ontem '+hora;
+  return d.toLocaleDateString('pt-BR')+' '+hora;
+}
+
+async function projLoad(){
+  let d;
+  try{ d=await(await fetch('/api/projects')).json(); }
+  catch(e){ return; }
+  const ps=d.projetos||[];
+  if(!ps.length){
+    $('projStatus').innerHTML='<span class="sub">nenhum projeto ainda</span>';
+    $('projList').innerHTML='<div class="sub">Os cortes que você gerar aparecem '
+      +'aqui e continuam acessíveis mesmo depois de fechar o programa.</div>';
+    return;
+  }
+  $('projStatus').innerHTML=`<span class="sub">${d.total} projeto(s) salvos</span>`;
+  const icone={youtube:'▶️',arquivo:'📁',lote:'🗂️'};
+  $('projList').innerHTML=ps.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;
+                border-bottom:1px solid var(--bd)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;
+                    overflow:hidden;text-overflow:ellipsis">
+          ${icone[p.origem]||'🎬'} ${p.titulo}</div>
+        <div class="sub" style="font-size:11px">
+          ${p.cortes} corte(s) · ${quandoTxt(p.quando)}</div>
+      </div>
+      <a href="#" onclick="abrirProjeto('${p.id}');return false"
+         style="font-size:12px;color:var(--acc2);text-decoration:none;
+                white-space:nowrap">abrir cortes →</a>
+    </div>`).join('');
+}
+
+async function abrirProjeto(id){
+  const r=await fetch('/api/jobs/'+id);
+  if(!r.ok){
+    $('projStatus').innerHTML='<span style="color:var(--err)">projeto não encontrado</span>';
+    return;
+  }
+  const j=await r.json();
+  if(j.step!=='concluido'||!(j.clips||[]).length){
+    $('projStatus').innerHTML='<span style="color:var(--warn)">esse projeto não tem cortes prontos</span>';
+    return;
+  }
+  render(j);
+  $('clips').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* Ao abrir a página, se houver ?job=… na URL (é assim que o editor volta),
+   restaura os cortes daquele projeto em vez de mostrar a tela vazia. */
+async function restaurarDaURL(){
+  const id=new URLSearchParams(location.search).get('job');
+  if(id) await abrirProjeto(id);
+}
+
+function render(j){
+  window.lastJobId=j.id;
+  // usa o layout DO PROJETO (não o do formulário): ao reabrir um projeto
+  // antigo o formulário pode estar em outra opção e quebraria os botões
+  window.lastLayout=j.layout||$('layout').value;
+  // deixa o projeto na URL para poder voltar do editor e recarregar a página
+  try{ history.replaceState(null,'','/?job='+j.id); }catch(e){}
+  $('clips').innerHTML=j.clips.map((c,i)=>`
+  <div class="clip" id="clip-${i+1}">
+    <video src="${c.mp4}" controls preload="metadata"></video>
+    <div class="body">
+      <span class="score">🔥 ${c.score}/100</span>
+      <h3>${c.title}</h3>
+      <div class="sub">⏱️ ${c.duration}s &nbsp;•&nbsp; ${fmt(c.start)} → ${fmt(c.end)}</div>
+      ${c.headline?`<div class="pat"><span class="tag t-hook">TÍTULO NO VÍDEO</span><b>${c.headline}</b></div>`:''}
+      <div class="pat"><span class="tag t-hook">HOOK</span>${c.hook}</div>
+      <div class="pat"><span class="tag t-dev">DESENVOLVIMENTO</span>${c.development}</div>
+      <div class="pat"><span class="tag t-cta">CTA</span>${c.cta}</div>
+      <div class="pat"><b>Por que viraliza:</b> ${c.reason}</div>
+      <div class="dl">
+        <a href="${c.mp4}" download="corte_${i+1}.mp4">⬇️ MP4 (1080x1920)</a>
+        <a href="${c.srt}" download="corte_${i+1}.srt">📝 SRT</a>
+        <a href="#" onclick="editSub(${i+1});return false">✏️ Corrigir legenda</a>
+      </div>
+      <div class="dl">
+        <a href="/editor?job=${window.lastJobId}&clip=${i+1}"
+           style="background:linear-gradient(135deg,var(--acc),#5a3df0);border:none;font-weight:600">
+           🎬 Abrir no editor</a>
+        <a href="#" onclick="openTL(${i+1});return false">🎚️ Timeline rápida</a>
+      </div>
+      ${window.lastLayout==='split'?`<div class="dl">
+        <a href="#" onclick="$('img-${i+1}').click();return false">🖼️ Imagem de apoio</a>
+        <a href="#" onclick="removeImg(${i+1});return false">🗑️ Remover imagem</a>
+      </div>
+      <label style="margin-top:8px">Encaixe da imagem</label>
+      <select id="fit-${i+1}" class="subline" style="width:100%">
+        <option value="contain" selected>Centralizar (imagem inteira)</option>
+        <option value="cover">Preencher (corta excesso)</option>
+      </select>
+      <input id="img-${i+1}" type="file" accept="image/*" class="hidden" onchange="uploadImg(${i+1})">`:''}
+      <div class="editor" id="ed-${i+1}" style="display:none"></div>
+      <div style="margin-top:10px;border-top:1px solid var(--bd);padding-top:10px">
+        <a href="#" onclick="ytPanel(${i+1});return false" style="font-size:12px;color:var(--acc2)">📤 Publicar no YouTube</a>
+        <div class="editor" id="ytp-${i+1}" style="display:none;margin-top:8px">
+          <label>Título <span class="sub" style="font-weight:400">(máx. 100)</span></label>
+          <input id="ytt-${i+1}" maxlength="100"
+                 value="${(c.yt_title||c.headline||c.title||'Corte viral').replace(/"/g,'&quot;')}">
+          <label style="margin-top:6px">Descrição</label>
+          <textarea id="ytd-${i+1}" class="subline" rows="4" style="width:100%;font-family:inherit;line-height:1.5">${c.yt_description||''}</textarea>
+          <div class="row" style="margin-top:6px">
+            <div>
+              <label>Privacidade</label>
+              <select id="ytv-${i+1}">
+                <option value="unlisted" selected>Não listado</option>
+                <option value="private">Privado</option>
+                <option value="public">Público</option>
+              </select>
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <label style="font-weight:400"><input type="checkbox" id="yts-${i+1}" checked style="width:auto"> marcar como #Shorts</label>
+            </div>
+          </div>
+          <div class="dl" style="margin-top:8px">
+            <a href="#" onclick="ytPublish(${i+1});return false">🚀 Publicar</a>
+          </div>
+          <div id="ytmsg-${i+1}" class="sub" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+function ytPanel(n){ $('ytp-'+n).style.display = $('ytp-'+n).style.display==='none' ? 'block' : 'none'; }
+
+async function ytPublish(n){
+  const st=await(await fetch('/api/youtube/status')).json();
+  if(!st.autorizado){
+    $('ytmsg-'+n).innerHTML='<span style="color:var(--err)">Configure e autorize o YouTube no topo da página primeiro.</span>';
+    return;
+  }
+  $('ytmsg-'+n).textContent='enviando…';
+  const r=await fetch('/api/youtube/publish',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({job_id:window.lastJobId, clip:n,
+      title:$('ytt-'+n).value.trim(), description:$('ytd-'+n).value,
+      privacy:$('ytv-'+n).value, is_short:$('yts-'+n).checked})});
+  const d=await r.json();
+  if(!r.ok){$('ytmsg-'+n).innerHTML='<span style="color:var(--err)">'+(d.detail||'erro')+'</span>';return}
+  const pid=d.id;
+  const poll=setInterval(async()=>{
+    const s=await(await fetch('/api/youtube/publish/'+pid)).json();
+    if(s.step==='enviando'||s.step==='iniciando'){
+      $('ytmsg-'+n).textContent=`enviando… ${s.progress||0}%`;
+    }else if(s.step==='concluido'){
+      clearInterval(poll);
+      $('ytmsg-'+n).innerHTML=`<span style="color:var(--acc2)">✅ publicado: <a href="${s.url}" target="_blank" style="color:var(--acc2)">${s.url}</a></span>`;
+    }else if(s.step==='erro'){
+      clearInterval(poll);
+      $('ytmsg-'+n).innerHTML='<span style="color:var(--err)">❌ '+(s.detail||'erro')+'</span>';
+    }
+  },1500);
+}
+
+async function uploadImg(n){
+  const inp=$('img-'+n); if(!inp.files[0])return;
+  const box=$('ed-'+n); box.style.display='block';
+  box.innerHTML='<div class="sub">🎬 Aplicando imagem de apoio e re-renderizando... (~30s)</div>';
+  const fd=new FormData();
+  fd.append('file',inp.files[0]);
+  fd.append('fit',$('fit-'+n).value);
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/image`,{method:'POST',body:fd});
+  finishImg(r,n,'✅ Imagem de apoio adicionada!');
+}
+async function removeImg(n){
+  const box=$('ed-'+n); box.style.display='block';
+  box.innerHTML='<div class="sub">🎬 Removendo imagem e re-renderizando...</div>';
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/image`,{method:'DELETE'});
+  finishImg(r,n,'✅ Voltou ao frame do vídeo.');
+}
+async function finishImg(r,n,msg){
+  const box=$('ed-'+n);
+  if(r.ok){
+    box.innerHTML='<div class="sub">'+msg+'</div>';
+    const v=document.querySelector(`#clip-${n} video`);
+    v.src=v.src.split('?')[0]+'?t='+Date.now();
+  }else{
+    const e=await r.json().catch(()=>({detail:'erro'}));
+    box.innerHTML='<div class="err">'+(e.detail||'Erro ao re-renderizar')+'</div>';
+  }
+}
+
+/* ---------------- Timeline ---------------- */
+const TL={};
+
+async function openTL(n){
+  const box=$('ed-'+n); box.style.display='block';
+  box.innerHTML='<div class="sub">Carregando timeline...</div>';
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/timeline`);
+  if(!r.ok){box.innerHTML='<div class="err">Corte não disponível (gere-o nesta sessão).</div>';return}
+  const d=await r.json();
+  TL[n]={dur:d.duration, start:d.start, end:d.end, total:d.video_total,
+         lines:d.lines.map(l=>({...l})), music:{...d.music},
+         trim:{s:0,e:d.duration}};
+  drawTL(n);
+}
+
+function drawTL(n){
+  const t=TL[n], dur=t.dur;
+  const ticks=[]; const step=dur>40?10:5;
+  for(let s=0;s<=dur;s+=step) ticks.push(`<span style="left:${s/dur*100}%">${s}s</span>`);
+  const blocos=t.lines.map((l,k)=>`
+    <div class="blk" data-k="${k}" style="left:${l.s/dur*100}%;width:${Math.max((l.e-l.s)/dur*100,1.2)}%"
+         title="${l.text}">${l.text}<div class="h l"></div><div class="h r"></div></div>`).join('');
+  const mus=t.music.name?`
+    <div class="blk mus" data-k="mus" style="left:${t.music.start/dur*100}%;width:${(1-t.music.start/dur)*100}%">
+      🎵 ${t.music.name}<div class="h l"></div></div>`:
+    '<div class="tlhint" style="padding:9px 10px">Nenhuma música enviada</div>';
+  $('ed-'+n).innerHTML=`
+    <div class="tl">
+      <div class="tlruler">${ticks.join('')}</div>
+      <div class="tlrow"><div class="tlname">Legendas</div>
+        <div class="tltrack" id="tk-sub-${n}">${blocos}</div></div>
+      <div class="tlrow"><div class="tlname">Música</div>
+        <div class="tltrack" id="tk-mus-${n}">${mus}</div></div>
+      <div class="tlrow"><div class="tlname">Trecho</div>
+        <div class="tltrack" id="tk-trim-${n}">
+          <div class="blk trim" data-k="trim"
+               style="left:${t.trim.s/dur*100}%;width:${(t.trim.e-t.trim.s)/dur*100}%">
+            ✂️ ${t.trim.s.toFixed(1)}s → ${t.trim.e.toFixed(1)}s
+            <div class="h l"></div><div class="h r"></div></div></div></div>
+      <div class="tlhint">Arraste as bordas para ajustar • arraste o meio para mover</div>
+      <label>Volume da música: <span id="tlv-${n}">${t.music.volume}%</span></label>
+      <input type="range" min="0" max="60" value="${t.music.volume}" style="width:100%;padding:0"
+             oninput="TL[${n}].music.volume=+this.value;$('tlv-${n}').textContent=this.value+'%'">
+      <div class="dl">
+        <a href="#" onclick="applyTL(${n});return false">💾 Aplicar e re-renderizar</a>
+        <a href="#" onclick="$('ed-${n}').style.display='none';return false">Cancelar</a>
+      </div>
+    </div>`;
+  ['sub','mus','trim'].forEach(tk=>bindDrag(n,$(`tk-${tk}-${n}`)));
+}
+
+function bindDrag(n,track){
+  if(!track)return;
+  track.querySelectorAll('.blk').forEach(el=>{
+    el.addEventListener('mousedown',ev=>{
+      const t=TL[n], dur=t.dur, W=track.clientWidth;
+      const key=el.dataset.k;
+      const modo=ev.target.classList.contains('h')
+        ? (ev.target.classList.contains('l')?'L':'R') : 'M';
+      const x0=ev.clientX;
+      const obj = key==='mus' ? {s:t.music.start,e:dur}
+                : key==='trim'? {...t.trim} : {...t.lines[+key]};
+      const o={...obj};
+      ev.preventDefault();
+      // limites: legendas não podem invadir a vizinha (evita embaralhar palavras)
+      let lim0=0, lim1=dur;
+      if(key!=='mus'&&key!=='trim'){
+        const k=+key;
+        if(t.lines[k-1]) lim0=t.lines[k-1].e;
+        if(t.lines[k+1]) lim1=t.lines[k+1].s;
+      }
+      const mover=e2=>{
+        const dt=(e2.clientX-x0)/W*dur;
+        let s=o.s, en=o.e;
+        if(modo==='L') s=Math.min(Math.max(lim0,o.s+dt),o.e-0.2);
+        else if(modo==='R') en=Math.max(Math.min(lim1,o.e+dt),o.s+0.2);
+        else { const w=o.e-o.s;
+               s=Math.min(Math.max(lim0,o.s+dt),Math.min(dur,lim1)-w); en=s+w; }
+        if(key==='mus') t.music.start=+s.toFixed(2);
+        else if(key==='trim'){ t.trim.s=+s.toFixed(2); t.trim.e=+en.toFixed(2); }
+        else { t.lines[+key].s=+s.toFixed(2); t.lines[+key].e=+en.toFixed(2); }
+        drawTL(n);
+      };
+      const soltar=()=>{document.removeEventListener('mousemove',mover);
+                        document.removeEventListener('mouseup',soltar)};
+      document.addEventListener('mousemove',mover);
+      document.addEventListener('mouseup',soltar);
+    });
+  });
+}
+
+async function applyTL(n){
+  const t=TL[n], box=$('ed-'+n);
+  box.innerHTML='<div class="sub">🎬 Aplicando timeline e re-renderizando... (~30s)</div>';
+  // tempos das legendas são relativos ao início ORIGINAL do corte;
+  // o backend remapeia e só depois aplica o novo trecho (trim)
+  const body={
+    start:t.start+t.trim.s, end:t.start+t.trim.e,
+    lines:t.lines.map(l=>({s:l.s,e:l.e})),
+    music_start:t.music.start, music_volume:t.music.volume};
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/timeline`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  finishImg(r,n,'✅ Timeline aplicada!');
+}
+
+async function editSub(n){
+  const box=$('ed-'+n);
+  box.style.display='block';
+  box.innerHTML='<div class="sub">Carregando legenda...</div>';
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/subtitle`);
+  if(!r.ok){box.innerHTML='<div class="err">Corte não disponível para edição (gere-o nesta sessão do servidor).</div>';return}
+  const {lines}=await r.json();
+  box.innerHTML=
+    '<div class="sub" style="margin-bottom:4px">Corrija as palavras erradas (os tempos são mantidos):</div>'
+    +lines.map((t,k)=>`<input class="subline" id="sl-${n}-${k}" value="${t.replace(/"/g,'&quot;')}">`).join('')
+    +`<div class="dl">
+       <a href="#" onclick="saveSub(${n},${lines.length});return false">💾 Salvar e re-renderizar</a>
+       <a href="#" onclick="$('ed-${n}').style.display='none';return false">Cancelar</a>
+     </div>`;
+}
+
+async function saveSub(n,total){
+  const lines=[];
+  for(let k=0;k<total;k++) lines.push($(`sl-${n}-${k}`).value);
+  const box=$('ed-'+n);
+  box.innerHTML='<div class="sub">🎬 Re-renderizando o corte com a legenda corrigida... (pode levar ~30s)</div>';
+  const r=await fetch(`/api/jobs/${window.lastJobId}/clips/${n}/subtitle`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lines})});
+  if(r.ok){
+    box.innerHTML='<div class="sub">✅ Legenda corrigida e corte atualizado!</div>';
+    const v=document.querySelector(`#clip-${n} video`);
+    v.src=v.src.split('?')[0]+'?t='+Date.now();
+  }else{
+    const e=await r.json().catch(()=>({detail:'erro desconhecido'}));
+    box.innerHTML='<div class="err">'+(e.detail||'Erro ao re-renderizar')+'</div>';
+  }
+}
+const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+/* Inicialização: lista os projetos salvos e, se a URL trouxer ?job=…
+   (é assim que o editor volta para cá), reabre os cortes daquele projeto. */
+projLoad();
+restaurarDaURL();
+</script>
+</body>
+</html>
